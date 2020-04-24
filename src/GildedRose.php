@@ -1,10 +1,8 @@
 <?php
 
 namespace App;
-
 final class GildedRose
 {
-
     const EPIC_QUALITY = 50;
     const SULFURAS = 'Sulfuras, Hand of Ragnaros';
     const BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert';
@@ -23,41 +21,33 @@ final class GildedRose
     public function updateQuality()
     {
         foreach ($this->items as $item) {
-            if ($item->name != self::AGED_BRIE and $item->name != self::BACKSTAGE_PASSES) {
-                if (!$this->isSulfuras($item)) {
-                    $this->decreaseQuality($item);
-                }
-            } else {
-                if ($this->isNotEpic($item)) {
+            if ($this->isDegradingItem($item)) {
+                $this->decreaseQuality($item);
+            }
+            if ($item->name == self::AGED_BRIE || $item->name == self::BACKSTAGE_PASSES) {
+                if ($this->isNotEpicQuality($item)) {
                     $this->increaseQuality($item);
-                    if ($item->name == self::BACKSTAGE_PASSES) {
-                        if ($this->isSellInLessThanElevent($item)) {
-                            $this->increaseQualityIfNotEpic($item);
-                        }
-                        if ($this->isSellInLessThanSix($item)) {
-                            $this->increaseQualityIfNotEpic($item);
-                        }
-                    }
+                }
+                if ($this->isNotEpicQuality($item) && $this->isBackstagePasses($item) && $this->isSellInLessThanElevent($item)) {
+                    $this->increaseQualityIfNotEpic($item);
+                }
+                if ($this->isNotEpicQuality($item) && $this->isBackstagePasses($item) && $this->isSellInLessThanSix($item)) {
+                    $this->increaseQualityIfNotEpic($item);
                 }
             }
-
             if (!$this->isSulfuras($item)) {
                 $item->sell_in = $item->sell_in - 1;
             }
-
             if ($this->isSellInExpired($item)) {
                 if ($item->name === self::AGED_BRIE) {
                     $this->increaseQualityIfNotEpic($item);
                 }
-
-                if ($item->name != self::AGED_BRIE) {
-                    if ($item->name != self::BACKSTAGE_PASSES) {
-                        if ($this->isSulfuras($item) === false) {
-                            $this->decreaseQuality($item);
-                        }
-                    }
+                if ($item->name != self::AGED_BRIE
+                    && $item->name != self::BACKSTAGE_PASSES
+                    && $this->isSulfuras($item) === false
+                ) {
+                    $this->decreaseQuality($item);
                 }
-
                 if ($item->name === self::BACKSTAGE_PASSES) {
                     $item->quality = 0;
                 }
@@ -95,7 +85,7 @@ final class GildedRose
      * @param $item
      * @return bool
      */
-    private function isNotEpic($item): bool
+    private function isNotEpicQuality($item): bool
     {
         return $item->quality < self::EPIC_QUALITY;
     }
@@ -142,9 +132,18 @@ final class GildedRose
      */
     private function increaseQualityIfNotEpic($item): void
     {
-        if ($this->isNotEpic($item)) {
+        if ($this->isNotEpicQuality($item)) {
             $this->increaseQuality($item);
         }
     }
-}
 
+    private function isBackstagePasses($item): bool
+    {
+        return $item->name == self::BACKSTAGE_PASSES;
+    }
+
+    private function isDegradingItem($item): bool
+    {
+        return $item->name != self::AGED_BRIE && $item->name != self::BACKSTAGE_PASSES && !$this->isSulfuras($item);
+    }
+}
