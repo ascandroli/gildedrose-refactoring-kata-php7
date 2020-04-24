@@ -24,33 +24,34 @@ final class GildedRose
             if ($this->isDegradingItem($item)) {
                 $this->decreaseQuality($item);
             }
-            if ($item->name == self::AGED_BRIE || $item->name == self::BACKSTAGE_PASSES) {
-                if ($this->isNotEpicQuality($item)) {
+
+            if ($this->isAgedBrie($item)) {
+                $this->increaseQuality($item);
+            }
+
+            if ($this->isBackstagePasses($item)) {
+                $this->increaseQuality($item);
+
+                if ($this->isSellInLessThanElevent($item)) {
                     $this->increaseQuality($item);
                 }
-                if ($this->isNotEpicQuality($item) && $this->isBackstagePasses($item) && $this->isSellInLessThanElevent($item)) {
-                    $this->increaseQualityIfNotEpic($item);
-                }
-                if ($this->isNotEpicQuality($item) && $this->isBackstagePasses($item) && $this->isSellInLessThanSix($item)) {
-                    $this->increaseQualityIfNotEpic($item);
+                if ($this->isSellInLessThanSix($item)) {
+                    $this->increaseQuality($item);
                 }
             }
+
             if (!$this->isSulfuras($item)) {
                 $item->sell_in = $item->sell_in - 1;
             }
-            if ($this->isSellInExpired($item)) {
-                if ($item->name === self::AGED_BRIE) {
-                    $this->increaseQualityIfNotEpic($item);
-                }
-                if ($item->name != self::AGED_BRIE
-                    && $item->name != self::BACKSTAGE_PASSES
-                    && $this->isSulfuras($item) === false
-                ) {
-                    $this->decreaseQuality($item);
-                }
-                if ($item->name === self::BACKSTAGE_PASSES) {
-                    $item->quality = 0;
-                }
+
+            if ($this->isAgedBrie($item) && $this->isSellInExpired($item)) {
+                $this->increaseQuality($item);
+            }
+            if ($this->isDegradingItem($item) && $this->isSellInExpired($item)) {
+                $this->decreaseQuality($item);
+            }
+            if ($this->isBackstagePasses($item) && $this->isSellInExpired($item)) {
+                $this->makeItWorthless($item);
             }
         }
     }
@@ -73,13 +74,6 @@ final class GildedRose
         return $item->name == self::SULFURAS;
     }
 
-    /**
-     * @param $item
-     */
-    public function increaseQuality($item): void
-    {
-        $item->quality = $item->quality + 1;
-    }
 
     /**
      * @param $item
@@ -130,10 +124,10 @@ final class GildedRose
     /**
      * @param $item
      */
-    private function increaseQualityIfNotEpic($item): void
+    private function increaseQuality($item): void
     {
         if ($this->isNotEpicQuality($item)) {
-            $this->increaseQuality($item);
+            $item->quality = $item->quality + 1;
         }
     }
 
@@ -145,5 +139,23 @@ final class GildedRose
     private function isDegradingItem($item): bool
     {
         return $item->name != self::AGED_BRIE && $item->name != self::BACKSTAGE_PASSES && !$this->isSulfuras($item);
+    }
+
+    /**
+     * @param $item
+     * @return bool
+     */
+    private function isAgedBrie($item): bool
+    {
+        return $item->name == self::AGED_BRIE;
+    }
+
+    /**
+     * @param $item
+     * @return int
+     */
+    private function makeItWorthless($item): int
+    {
+        return $item->quality = 0;
     }
 }
