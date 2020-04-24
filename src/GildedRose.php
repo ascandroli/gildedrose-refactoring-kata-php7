@@ -20,8 +20,8 @@ final class GildedRose {
     public function updateQuality() {
         foreach ($this->items as $item) {
             if ($item->name != self::AGED_BRIE and $item->name != self::BACKSTAGE_PASSES) {
-                if ($item->quality > 0) {
-                    if ($item->name != self::SULFURAS) {
+                if ($this->itemIsNotDegraded($item)) {
+                    if (!$this->isSulfuras($item)) {
                         $item->quality = $item->quality - 1;
                     }
                 }
@@ -31,19 +31,20 @@ final class GildedRose {
                     if ($item->name == self::BACKSTAGE_PASSES) {
                         if ($item->sell_in < self::SELL_IN_ELEVEN) {
                             if ($item->quality < self::EPIC_QUALITY) {
-                                $item->quality = $item->quality + 1;
+                                $this->increaseQuality($item);
+
                             }
                         }
                         if ($item->sell_in < self::SELL_IN_SIX) {
                             if ($item->quality < self::EPIC_QUALITY) {
-                                $item->quality = $item->quality + 1;
+                                $this->increaseQuality($item);
                             }
                         }
                     }
                 }
             }
             
-            if ($item->name != self::SULFURAS) {
+            if (!$this->isSulfuras($item)) {
                 $item->sell_in = $item->sell_in - 1;
             }
             
@@ -60,11 +61,37 @@ final class GildedRose {
                     }
                 } else {
                     if ($item->quality < self::EPIC_QUALITY) {
-                        $item->quality = $item->quality + 1;
+                        $this->increaseQuality($item);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * @param $item
+     * @return bool
+     */
+    public function itemIsNotDegraded($item): bool
+    {
+        return $item->quality > 0;
+    }
+
+    /**
+     * @param $item
+     * @return bool
+     */
+    public function isSulfuras($item): bool
+    {
+        return $item->name == self::SULFURAS;
+    }
+
+    /**
+     * @param $item
+     */
+    public function increaseQuality($item): void
+    {
+        $item->quality = $item->quality + 1;
     }
 }
 
