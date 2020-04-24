@@ -12,6 +12,7 @@ final class GildedRose
     const SELL_IN_ELEVEN = 11;
     const SELL_IN_SIX = 6;
     const SELL_IN_EXPIRATION = 0;
+    const MINIMUM_QUALITY = 0;
     private $items = [];
 
     public function __construct($items)
@@ -23,10 +24,8 @@ final class GildedRose
     {
         foreach ($this->items as $item) {
             if ($item->name != self::AGED_BRIE and $item->name != self::BACKSTAGE_PASSES) {
-                if ($this->itemIsNotDegraded($item)) {
-                    if (!$this->isSulfuras($item)) {
-                        $this->decreseQuality($item);
-                    }
+                if (!$this->isSulfuras($item)) {
+                    $this->decreaseQuality($item);
                 }
             } else {
                 if ($this->isNotEpic($item)) {
@@ -47,16 +46,20 @@ final class GildedRose
             }
 
             if ($this->isSellInExpired($item)) {
+                if ($item->name === self::AGED_BRIE) {
+                    $this->increaseQualityIfNotEpic($item);
+                }
+
                 if ($item->name != self::AGED_BRIE) {
                     if ($item->name != self::BACKSTAGE_PASSES) {
-                        if ($item->quality > 0 && $this->isSulfuras($item) === false) {
-                            $this->decreseQuality($item);
+                        if ($this->isSulfuras($item) === false) {
+                            $this->decreaseQuality($item);
                         }
-                    } else {
-                        $item->quality = 0;
                     }
-                } else {
-                    $this->increaseQualityIfNotEpic($item);
+                }
+
+                if ($item->name === self::BACKSTAGE_PASSES) {
+                    $item->quality = 0;
                 }
             }
         }
@@ -68,7 +71,7 @@ final class GildedRose
      */
     public function itemIsNotDegraded($item): bool
     {
-        return $item->quality > 0;
+        return $item->quality > self::MINIMUM_QUALITY;
     }
 
     /**
@@ -99,11 +102,12 @@ final class GildedRose
 
     /**
      * @param $item
-     * @return int
      */
-    private function decreseQuality($item): int
+    private function decreaseQuality($item)
     {
-        return $item->quality = $item->quality - 1;
+        if ($this->itemIsNotDegraded($item)) {
+            $item->quality = $item->quality - 1;
+        }
     }
 
     /**
